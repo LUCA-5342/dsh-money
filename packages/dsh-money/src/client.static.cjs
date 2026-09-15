@@ -288,14 +288,19 @@ function apply(ctx) {
       return;
     }
     const settingsArea = settingsSlot.parentElement;
-    const footArea = settingsArea.parentElement;
+    // 设置按钮所在的那一行：div.settingsLine = display:flex; align-items:center; gap:8px，
+    // 其中 settingsArea{flex:1}、settingsActions{flex:none}。把徽章插在 settingsArea
+    // 之后，它就落在这一行的右端、紧挨设置按钮。
+    const settingsLine = settingsArea.parentElement;
     const text = '余额 ' + fmtBalance(balance);
     const tip = '账号剩余金额（自动刷新）';
     if (!row) {
       row = document.createElement('div');
       row.className = 'dsh-money-balance-row';
-      row.style.cssText = 'color:#f0c11d;font-size:11px;padding:2px 12px;border-radius:8px;background:rgba(128,128,128,0.12);margin:2px 0 0;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;text-align:left;align-self:flex-start;max-width:100%;';
-      footArea.insertBefore(row, settingsArea.nextSibling);
+      // align-self:center 与同行其它项垂直居中对齐；原先写 flex-start 会顶到行首，
+      // 看起来像“设置按钮右上方另起一行”。
+      row.style.cssText = 'color:#f0c11d;font-size:11px;padding:2px 10px;border-radius:8px;background:rgba(128,128,128,0.12);margin:0;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;text-align:left;align-self:center;max-width:100%;';
+      settingsLine.insertBefore(row, settingsArea.nextSibling);
     }
     if (row.textContent !== text) row.textContent = text;
     if (row.title !== tip) row.title = tip;
