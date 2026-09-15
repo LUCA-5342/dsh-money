@@ -5,7 +5,7 @@
  * 四个远端方法（config / balance / overview / workspacesAll），client 半段
  * 通过 ctx.remote.moneyCost.* 调用。
  *
- * 计价口径（DeepSeek 官方价格页 2026-08 版，高峰价 = 空闲价 × 2）：
+ * 计价口径（DeepSeek 官方价格页 2026-09 版，高峰价 = 空闲价 × 2）：
  *  高峰时段 = 北京时间 9:00-12:00、14:00-18:00（即 UTC 01:00-04:00、06:00-10:00）
  *  账单 = 未命中输入(含 cache write) × miss 价 + 缓存命中 × hit 价 + 输出 × out 价
  */
@@ -25,15 +25,15 @@ import type {
 /**
  * 每百万 token 单价：人民币与美元两套价目
  * 来源：DeepSeek 官方价格页 https://api-docs.deepseek.com/zh-cn/quick_start/pricing
- * 更新日期：2026-08（官方调价时需同步更新并升级版本）
+ * 更新日期：2026-09（官方调价时需同步更新并升级版本）
  */
 const PRICES: Record<string, Record<string, { hit: number; miss: number; out: number }>> = {
   CNY: {
-    'deepseek-v4-flash': { hit: 0.05, miss: 1.5, out: 4.5 },
+    'deepseek-v4-flash': { hit: 0.02, miss: 1, out: 4 },
     'deepseek-v4-pro': { hit: 0.15, miss: 4.5, out: 13.5 },
   },
   USD: {
-    'deepseek-v4-flash': { hit: 0.007, miss: 0.22, out: 0.66 },
+    'deepseek-v4-flash': { hit: 0.003, miss: 0.15, out: 0.6 },
     'deepseek-v4-pro': { hit: 0.022, miss: 0.66, out: 1.98 },
   },
 };
