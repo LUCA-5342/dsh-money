@@ -117,23 +117,26 @@ export default class MoneyCostService extends TypertRemoteService {
       // 忽略凭据解析失败
     }
     if (!key) return null;
-    const shell = this.ctx.get('shell') as { resolve(spec: object): { run(spec: object): Promise<{ exitCode?: number; stdout?: { text: string } }> }; run(spec: object): Promise<{ exitCode?: number; stdout?: { text: string } }> } | undefined;
-    if (!shell) return null;
-    let result: { exitCode?: number; stdout?: { text: string } };
+    // 用宿主进程的 fetch，而不是 shell + curl：
+    //  1) 与 @deepseek-ai/dsh-llm-deepseek 走同一条路径（globalThis.fetch + 全局
+    //     undici dispatcher），因此遵守 DSH 的代理配置；
+    //  2) shell 出网会被沙箱按部署默认策略（workspace-write）执行，Windows 受限
+    //     令牌下 curl 的 Schannel 会 AcquireCredentialsHandle 失败
+    //     （SEC_E_NO_CREDENTIALS），余额永远取不到；
+    //  3) 免去 Windows 上 `curl` 被 PowerShell 别名成 Invoke-WebRequest 的坑。
+    let resp: Response;
     try {
-      const spec = shell.resolve({
-        command: `curl -sS -m 10 -H "Authorization: Bearer ${key}" "${baseURL}/user/balance"`,
-        timeoutMs: 15000,
-        stdoutMaxBytes: 1048576,
+      resp = await fetch(`${baseURL.replace(/\/+$/, '')}/user/balance`, {
+        headers: { Authorization: `Bearer ${key}` },
+        signal: AbortSignal.timeout(15000),
       });
-      result = await shell.run(spec);
     } catch (e) {
       return null;
     }
-    if (!result || result.exitCode !== 0) return null;
+    if (!resp.ok) return null;
     let body: { balance_infos?: Array<Record<string, unknown>> };
     try {
-      body = JSON.parse(result.stdout?.text || '{}');
+      body = await resp.json() as { balance_infos?: Array<Record<string, unknown>> };
     } catch (e) {
       return null;
     }
