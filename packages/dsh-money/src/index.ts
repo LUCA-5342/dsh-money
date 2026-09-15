@@ -7,7 +7,8 @@
  *
  * 计价口径（DeepSeek 官方价格页 2026-09 版，高峰价 = 空闲价 × 2）：
  *  模型名 = 官方新名 deepseek-flash / deepseek-v4-pro（旧名经 MODEL_ALIASES 归一）
- *  高峰时段 = 北京时间 9:00-12:00、14:00-18:00（即 UTC 01:00-04:00、06:00-10:00）
+ *  高峰时段 = 周一至周五 北京时间 9:00-12:00、14:00-18:00
+ *             （即 UTC 01:00-04:00、06:00-10:00），周末全天空闲
  *  账单 = 未命中输入(含 cache write) × miss 价 + 缓存命中 × hit 价 + 输出 × out 价
  */
 
@@ -50,8 +51,15 @@ const MODEL_ALIASES: Record<string, string> = {
   'deepseek-v4-flash-vision-exp': 'deepseek-flash',
 };
 
+/**
+ * 峰谷判定：高峰 = UTC 周一至周五 01:00-04:00 与 06:00-10:00，其余为空闲时段。
+ * 官方口径含「周一至周五」限定（周末全天按空闲价），故先判星期再判小时。
+ */
 function isPeakUtc(ms: number): boolean {
-  const h = new Date(ms).getUTCHours();
+  const d = new Date(ms);
+  const day = d.getUTCDay();
+  if (day === 0 || day === 6) return false; // 周六、周日全天按空闲价
+  const h = d.getUTCHours();
   return (h >= 1 && h < 4) || (h >= 6 && h < 10);
 }
 
