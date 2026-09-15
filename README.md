@@ -46,8 +46,10 @@
 
 | 模型 | 币种 | 缓存命中（空闲） | 未命中（空闲） | 输出（空闲） |
 |---|---|---|---|---|
-| deepseek-v4-flash | ¥ / $ | 0.02 / 0.003 | 1 / 0.15 | 4 / 0.6 |
+| deepseek-flash | ¥ / $ | 0.02 / 0.003 | 1 / 0.15 | 4 / 0.6 |
 | deepseek-v4-pro | ¥ / $ | 0.15 / 0.022 | 4.5 / 0.66 | 13.5 / 1.98 |
+
+> **模型名**：官方价格页现用 `deepseek-flash`。旧名 `deepseek-v4-flash` 与 `deepseek-v4-flash-vision-exp` 仍可调用，但对应模型已下线、请求由 DeepSeek-V4.1-Flash 提供服务并按 Flash 价格计费，故插件经 `MODEL_ALIASES` 把它们统一归一到 `deepseek-flash` 价目。
 
 > **价格来源**：[DeepSeek 官方价格页](https://api-docs.deepseek.com/zh-cn/quick_start/pricing)（中文）/ [Pricing 英文页](https://api-docs.deepseek.com/quick_start/pricing)。
 >
@@ -69,7 +71,7 @@
 4. **峰谷判定**：按该回复的时间戳判断——高峰时段（北京 9:00-12:00、14:00-18:00）三档价格全部 × 2
 5. **求和**：会话内所有回复费用相加 = 本对话费用；同一工作区内所有会话费用相加 = 工作区总费用；单条即每次回复费用
 
-**计算示例**（deepseek-v4-flash 空闲时段，CNY）：
+**计算示例**（deepseek-flash 空闲时段，CNY）：
 
 ```
 usage: input 736 / cacheRead 492,928 / output 816

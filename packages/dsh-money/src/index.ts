@@ -6,6 +6,7 @@
  * 通过 ctx.remote.moneyCost.* 调用。
  *
  * 计价口径（DeepSeek 官方价格页 2026-09 版，高峰价 = 空闲价 × 2）：
+ *  模型名 = 官方新名 deepseek-flash / deepseek-v4-pro（旧名经 MODEL_ALIASES 归一）
  *  高峰时段 = 北京时间 9:00-12:00、14:00-18:00（即 UTC 01:00-04:00、06:00-10:00）
  *  账单 = 未命中输入(含 cache write) × miss 价 + 缓存命中 × hit 价 + 输出 × out 价
  */
@@ -29,13 +30,24 @@ import type {
  */
 const PRICES: Record<string, Record<string, { hit: number; miss: number; out: number }>> = {
   CNY: {
-    'deepseek-v4-flash': { hit: 0.02, miss: 1, out: 4 },
+    'deepseek-flash': { hit: 0.02, miss: 1, out: 4 },
     'deepseek-v4-pro': { hit: 0.15, miss: 4.5, out: 13.5 },
   },
   USD: {
-    'deepseek-v4-flash': { hit: 0.003, miss: 0.15, out: 0.6 },
+    'deepseek-flash': { hit: 0.003, miss: 0.15, out: 0.6 },
     'deepseek-v4-pro': { hit: 0.022, miss: 0.66, out: 1.98 },
   },
+};
+
+/**
+ * 模型改名映射：官方价格页注明模型名为 `deepseek-flash`，旧名
+ * `deepseek-v4-flash` 与 `deepseek-v4-flash-vision-exp` 仍可调用，但对应模型
+ * 已下线，请求由 DeepSeek-V4.1-Flash 提供服务并按 Flash 价格计费。
+ * 因此旧名与 vision 变体统一归一到 `deepseek-flash` 价目。
+ */
+const MODEL_ALIASES: Record<string, string> = {
+  'deepseek-v4-flash': 'deepseek-flash',
+  'deepseek-v4-flash-vision-exp': 'deepseek-flash',
 };
 
 function isPeakUtc(ms: number): boolean {
@@ -49,7 +61,7 @@ function priceOf(
   currency: string,
 ): { hit: number; miss: number; out: number } | null {
   const table = PRICES[currency] || PRICES.CNY;
-  const base = table[model];
+  const base = table[MODEL_ALIASES[model] || model];
   if (!base) return null;
   const k = isPeakUtc(ms) ? 2 : 1;
   return { hit: base.hit * k, miss: base.miss * k, out: base.out * k };
@@ -211,7 +223,7 @@ export default class MoneyCostService extends TypertRemoteService {
     incremental: boolean,
   ): Promise<{ replies: MoneyReplyCost[]; conversationCost: number | null }> {
     const timer = this.ctx.get('timer') as { timeout(ms: number): Promise<void> } | undefined;
-    let lastModel = 'deepseek-v4-flash';
+    let lastModel = 'deepseek-flash';
     const CHUNK = 5000;
     for (let i = 0; i < events.length; i++) {
       if (i % CHUNK === 0 && i > 0) {
